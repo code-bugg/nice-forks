@@ -1,43 +1,26 @@
-package server
+package main
 
 import (
 	"fmt"
-	"io"
-	"net"
+	"net/http"
 )
 
-func handleClient(conn net.Conn) {
-	defer conn.Close()
-	buffer := make([]byte, 1024)
-
-	for {
-		n, err := conn.Read(buffer)
-		if err != nil {
-			if err == io.EOF {
-				fmt.Println("Client disconnected.")
-			}
-			return
-		}
-		conn.Write(buffer[:n])
-	}
+// Define a handler function that will be called for requests to the root path.
+func handler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello, World!") // Send "Hello, World!" as the response.
 }
 
 func main() {
-	listener, err := net.Listen("tcp", ":8080")
+	// Register the handler function for the root path ("/").
+	http.HandleFunc("/", handler)
+
+	// Specify the port the server should listen on.
+	port := ":8080"
+	fmt.Printf("Server is listening on port %s...\n", port)
+
+	// Start the HTTP server. ListenAndServe will block until the server is stopped.
+	err := http.ListenAndServe(port, nil)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return
-	}
-	defer listener.Close()
-
-	fmt.Println("Go Server listening on port 8080...")
-
-	for {
-		conn, err := listener.Accept()
-		if err != nil {
-			fmt.Println("Connection error: ", err)
-			continue
-		}
-		go handleClient(conn)
+		fmt.Println("Error starting the server:", err)
 	}
 }
